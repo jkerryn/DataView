@@ -1,46 +1,33 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
-    <script src="scripts/d3.min.js" type="text/javascript"></script>
-    <script src="scripts/d3.tip.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
-    <script src="scripts/jquery.js" type="text/javascript"></script>
-    <script src="scripts/turf.min.js" type="text/javascript"></script>
-    <script src="scripts/simplestat.min.js" type="text/javascript"></script>
-   <!--  // <script src="scripts/L.SvgScaleOverlay.js" type="text/javascript"></script> -->
-    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
-    <script src="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js"></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js'></script>
-    <link rel="stylesheet" href="styles/map.css" />
-    <link rel="stylesheet" href="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css" />
-    </head>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+  <script src="scripts/d3.min.js" type="text/javascript"></script>
+  <script src="scripts/d3.tip.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+  <script src="scripts/jquery.js" type="text/javascript"></script>
+  <script src="scripts/turf.min.js" type="text/javascript"></script>
+  <script src="scripts/simplestat.min.js" type="text/javascript"></script>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+  <script src="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js'></script>
+  <link rel="stylesheet" href="styles/map.css" />
+  <link rel="stylesheet" href="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css" />
+</head>
 
 <style>
 
 #logo {
-  /*width: 100%;
-  height: 100%;*/
   display: block;
   margin-left: auto;
   margin-right: auto;
-  /*display: block;
-  display: inline-block;
-  float: left;*/
 }
 
 #dropdown {
-  /*width: 75%;
-  height: 75%;*/
   display: block;
   margin-left: auto;
   margin-right: auto;
-  /*display: inline-block;
-  
-  bottom: 50px;*/
 }
-
 
 #nodeToggle {
   display: block;
@@ -51,7 +38,6 @@
 #map {
   width: 100%;
   height: 100%;
-  /*float: right;*/
 }
 
 svg {
@@ -60,17 +46,12 @@ svg {
 }
 
 path {
-  /*stroke: #fff;*/
   stroke-width: 1.5px;
 }
 
 path:hover {
   stroke-opacity: 50%;
 }
-
-
-
-
 
 .key line, text {
   stroke: #000;
@@ -97,7 +78,6 @@ path:hover {
     margin-right: auto;
 }
 
-
 .legend {
     padding: 0px 10px;
     top: 10px;
@@ -108,14 +88,10 @@ path:hover {
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
 }
-/*.key tickValues {
-  font: 10px sans-serif;
-}*/
 
 .key path {
   display: none;
 }
-
 
 #edge2 {
   stroke: green;
@@ -178,32 +154,26 @@ input#toggle:checked + label:after {
   box-shadow: inset 0 0 0 1px rgba(252, 76, 3, 1), 0 2px 4px rgba(0, 0, 0, .2);
 }
 
+.node_legend circle {
+  fill: none;
+  stroke: black;
+}
+
+.node_legend text {
+  fill: #777;
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
 
 </style>
+
 <body>
 
 <div id="loader_container"></div>
 
-<!-- <input type="checkbox" name="toggle" id="toggle"/>
-  <label for="toggle"></label> -->
-
 <div id="map">
 
-
-
-
-
-  <script src="scripts/L.SvgScaleOverlay.js" type="text/javascript"></script>
-
-
-<!-- <div id="header"></div>  -->
-
-
-
-
-<!-- <input type='button' id='b' value='Toggle Intersections' class="btn"></input> -->
-
-
+<script src="scripts/L.SvgScaleOverlay.js" type="text/javascript"></script>
 
 <script>
 
@@ -213,7 +183,8 @@ if(document.images){
   myimage.src = "data/Metro.png";
 }
 
-var theMap = (function() {
+//// DEFINE FUNCTION VARIABLE FOR DATA VIEW ////
+var dataView = (function() {
 
   // config references
   var config = {
@@ -248,20 +219,16 @@ var theMap = (function() {
     .addLayer(mapboxTiles)
     .setView([37.780536, -122.42], 13);
 
-  // set min/max zoom levels
-  var minZoom = 9;
-  var maxZoom = 18;
-
   new L.Control.Zoom({ position: 'topright' }).addTo(map);
 
-  /* Initialize the SVG layer */
+  // Initialize the SVG layer 
   map._initPathRoot();
 
   // define svg, hide phantom artifacts on zoom, append svg to group with class "leaflet-zoom-hide"
   var svg = d3.select(map.getPanes().overlayPane).append("svg"),
   g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
-  /* We simply pick up the SVG from the map object */
+  // define node svg layer
   var svgNodes = d3.select("#map").select("svg"),
   gNodes = svgNodes.append("g");
 
@@ -297,14 +264,6 @@ var theMap = (function() {
 
   header.addTo(map);
 
-  // // define svg for header, append svg to a group with class "header"
-  // var svg_header = d3.select(".header.leaflet-control").append("svg")
-  //   .attr("id", "header")
-  //   .attr("width", 225)
-  //   .attr("height", 10);
-
-  // var g_header = svg_header.append("g")
-  //   .attr("class", "head");
 
   //// ADD METRO LOGO
 
@@ -313,8 +272,6 @@ var theMap = (function() {
    
   // create svg area for Logo
   var svg_Logo = d3.select(".header.leaflet-control").append("svg")
-    //.attr("width",  width + "px")
-    //.attr("height", height + "px")
     .attr("viewBox", "0 0 " + width + " " + height)
     .attr("preserveAspectRatio", "xMidYMid meet");
 
@@ -333,7 +290,7 @@ var theMap = (function() {
 
   //function ready(error, nodes_collection) {
       
-
+  // GET 100% GPS VERIFIED INTERSECTION DATA
   d3.json("data/sf_nodes_weekday_total.json", function(error, nodes_collection) {
     
     var nodes = nodes_collection.features;
@@ -347,7 +304,7 @@ var theMap = (function() {
 
     console.log(nodes);
 
-    // create an athlete count filter variable
+    // create an athlete count > 0 filter variable
     var ATHCNT_filter = nodes.filter(function(d) { return (d.ATHCNT > 0) });
         console.log("filter", ATHCNT_filter);
 
@@ -357,6 +314,10 @@ var theMap = (function() {
 
     // var breaks = (ss.jenks(MEDMEDT_filter.map (function(d) { return d.MEDMAXT; }), 5));
     //     console.log("breaks", breaks);
+
+    // var breaks = (ss.jenks(ATHCNT_filter.map (function(d) { return d.ATHCNT; }), 5));
+    //     console.log("breaks", breaks);
+
 
     // get min/ max for athlete counts and median max times
     var Min_ATHCNT = d3.min(ATHCNT_filter, function (d) {
@@ -397,7 +358,7 @@ var theMap = (function() {
       .domain([Min_ATHCNT, Max_ATHCNT])
       .range([0.4,2]);
 
-    var radius_Init = d3.scale.linear()
+    var radius_Init = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
       .range([0.8,4]);
 
@@ -438,25 +399,100 @@ var theMap = (function() {
       .domain([6.5, 18.5, 44, 129, 297]) // these values come jenks classifier
       .range([MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
 
-    var node_legend = d3.select(".header.leaflet-control").append("g")
-      .attr("class", "node_legend")
-    .attr("transform", "translate(" + (width - 50) + "," + (height - 20) + ")")
-  .selectAll("g")
-    .data([6.5, 18.5, 44, 129])
-  .enter().append("g");
-
-node_legend.append("circle")
-    .attr("cy", function(d) { return -radius_Init(d); })
-    .attr("r", radius_Init);
-
-node_legend.append("text")
-    .attr("y", function(d) { return -2 * radius_Init(d); })
-    .attr("dy", "1.3em")
-    .text(d3.format(".1s"));
-
     // get current map zoom
     var currentZoom = map.getZoom();
 
+    var intersectionLegend = gNodesLegend.selectAll("circle")
+      .data([1, 583, 1912, 3905, 6551, 11185])
+      
+      
+      //.attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
+
+    // var node_legend = d3.select(".header.leaflet-control").append("svg").append("g")
+    //   .attr("class", "node_legend")
+    //   .attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
+    //   .selectAll("g")
+    //   .data([1, 583, 1912, 3905, 6551, 11185])
+    //   .enter().append("g");
+
+    .enter().append("circle")
+    .attr("class", "node_legend")
+    .attr("fill", "black")
+      .attr("cy", function (d) {
+        if (currentZoom == 13)
+        return -radius_Init(d);
+
+        else if (currentZoom == 9)
+        return -radius_9(d);
+
+        else if (currentZoom == 10)
+        return -radius_10(d);
+
+        else if (currentZoom == 11)
+        return -radius_11(d);
+
+        else if (currentZoom == 12)
+        return -radius_12(d);
+
+        else if (currentZoom == 14)
+        return -radius_14(d);
+
+        else if (currentZoom == 15)
+        return -radius_15(d);
+
+        else if (currentZoom == 16)
+        return -radius_16(d);
+
+        else if (currentZoom == 17)
+        return -radius_17(d);
+
+        else if (currentZoom == 18)
+        return -radius_18(d);
+
+      })
+        
+      .attr("r", function (d) {
+        if (currentZoom == 13)
+        return radius_Init(d);
+
+        else if (currentZoom == 9)
+        return radius_9(d);
+
+        else if (currentZoom == 10)
+        return radius_10(d);
+
+        else if (currentZoom == 11)
+        return radius_11(d);
+
+        else if (currentZoom == 12)
+        return radius_12(d);
+
+        else if (currentZoom == 14)
+        return radius_14(d);
+
+        else if (currentZoom == 15)
+        return radius_15(d);
+
+        else if (currentZoom == 16)
+        return radius_16(d);
+
+        else if (currentZoom == 17)
+        return radius_17(d);
+
+        else if (currentZoom == 18)
+        return radius_18(d);
+
+      });
+//     
+
+//   node_legend.transition(1000);
+
+// node_legend.append("text")
+//     .attr("y", function(d) { return -2 * radius_14(d); })
+//     .attr("dy", "1.3em")
+//     .text(d3.format(".1s"));
+
+    
     // create intersection variable, node data, append circle, radius scale based on zoom level
     var intersection = gNodes.selectAll("circle")
       .data(nodes_collection.features.sort(function(a, b) { return b.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT - a.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT; }))
@@ -526,6 +562,76 @@ node_legend.append("text")
       var currentZoom = map.getZoom();
       var currentRadius = d3.selectAll('circle').attr("r");
       //console.log("currentRadius", currentRadius);
+      intersectionLegend.transition()
+      .attr("fill", "green")
+      .style("opacity", 1)
+      .attr("cy", function (d) {
+        if (currentZoom == 13)
+        return -radius_Init(d);
+
+        else if (currentZoom == 9)
+        return -radius_9(d);
+
+        else if (currentZoom == 10)
+        return -radius_10(d);
+
+        else if (currentZoom == 11)
+        return -radius_11(d);
+
+        else if (currentZoom == 12)
+        return -radius_12(d);
+
+        else if (currentZoom == 14)
+        return -radius_14(d);
+
+        else if (currentZoom == 15)
+        return -radius_15(d);
+
+        else if (currentZoom == 16)
+        return -radius_16(d);
+
+        else if (currentZoom == 17)
+        return -radius_17(d);
+
+        else if (currentZoom == 18)
+        return -radius_18(d);
+
+      })
+        
+      .attr("r", function (d) {
+        if (currentZoom == 13)
+        return radius_Init(d);
+
+        else if (currentZoom == 9)
+        return radius_9(d);
+
+        else if (currentZoom == 10)
+        return radius_10(d);
+
+        else if (currentZoom == 11)
+        return radius_11(d);
+
+        else if (currentZoom == 12)
+        return radius_12(d);
+
+        else if (currentZoom == 14)
+        return radius_14(d);
+
+        else if (currentZoom == 15)
+        return radius_15(d);
+
+        else if (currentZoom == 16)
+        return radius_16(d);
+
+        else if (currentZoom == 17)
+        return radius_17(d);
+
+        else if (currentZoom == 18)
+        return radius_18(d);
+
+      });
+      
+
       intersection.attr("r", function (d) {
         if (currentZoom == 13)
         return radius_Init(d.ATHCNT);
@@ -565,7 +671,6 @@ node_legend.append("text")
 
       update();
       console.log("zoomlevel", currentZoom);
-      console.log("maxZ", maxZoom);
       
     };  
 
@@ -609,6 +714,11 @@ node_legend.append("text")
     // Update whether or not the elements are active
     intersection.active = active;
   });
+
+  // define node legend svg layer
+  var svgNodesLegend = d3.select(".header.leaflet-control").append("svg"),
+    gNodesLegend = svgNodesLegend.append("g");
+
 
 
   // bind statistics defined above to select and create an on change function
@@ -925,38 +1035,8 @@ node_legend.append("text")
 
 }); 
 
-return theMap;
+return dataView;
 
 }());     
-
-
-
-
-
-  // // Add toggle for showing intersections
-  // d3.select(".header.leaflet-control").append("text")
-  //   .attr("id", "nodeToggle")
-  //   //.attr("x", 5)             
-  //   .attr("y", 100)    
-  //   .style("fill", "pink")         
-  //   .on("click", function() {
-  //     // Determine if current line is visible
-  //     var active   = nodes.active ? false : true,
-  //       newOpacity = active ? 0.6 : 0;
-  //       // Hide or show the elements
-  //       d3.selectAll("#nodes").style("opacity", newOpacity);
-  //       // Update whether or not the elements are active
-  //       nodes.active = active;
-  //     })
-  //   .text("Toggle Intersections");
-
-
-
-
-
-  
-
-
-  
 
 </script>
