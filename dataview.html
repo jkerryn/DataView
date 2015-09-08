@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <script src="scripts/d3.min.js" type="text/javascript"></script>
+    <script src="scripts/d3.tip.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+    <script src="scripts/jquery.js" type="text/javascript"></script>
+    <script src="scripts/turf.min.js" type="text/javascript"></script>
+    <script src="scripts/simplestat.min.js" type="text/javascript"></script>
+   <!--  // <script src="scripts/L.SvgScaleOverlay.js" type="text/javascript"></script> -->
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <script src="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js'></script>
+    <link rel="stylesheet" href="styles/map.css" />
+    <link rel="stylesheet" href="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css" />
+    </head>
+
+<style>
+
+#logo {
+  /*width: 100%;
+  height: 100%;*/
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  /*display: block;
+  display: inline-block;
+  float: left;*/
+}
+
+#dropdown {
+  /*width: 75%;
+  height: 75%;*/
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  /*display: inline-block;
+  
+  bottom: 50px;*/
+}
+
+#nodeToggle {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  /*float: right;*/
+}
+
+svg {
+  fill: none;
+  position: relative;
+}
+
+path {
+  /*stroke: #fff;*/
+  stroke-width: 1.5px;
+}
+
+path:hover {
+  stroke-opacity: 50%;
+}
+
+
+
+
+
+.key line, text {
+  stroke: #000;
+  shape-rendering: crispEdges;
+  font-size: 10px; 
+}
+
+.context line, text {
+  fill: #000;
+  shape-rendering: crispEdges;
+  font-size: 10px; 
+}
+
+.header {
+    padding: 0px 5px 10px 5px;
+    top: 5px;
+    /*font: 13px sans-serif;*/
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.legend {
+    padding: 0px 10px;
+    top: 10px;
+    right: 15px;
+    font: 10px sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+/*.key tickValues {
+  font: 10px sans-serif;
+}*/
+
+.key path {
+  display: none;
+}
+
+
+#edge2 {
+  stroke: green;
+}
+
+input#toggle {
+  max-height: 0;
+  max-width: 0;
+  opacity: 0;
+}
+
+input#toggle + label {
+  display: block;
+  position: relative;
+  box-shadow: inset 0 0 0px 1px #d5d5d5;
+  text-indent: -5000px;
+  height: 20px;
+  width: 50px;
+  border-radius: 15px;
+}
+
+input#toggle + label:before {
+  content: "";
+  position: absolute;
+  display: block;
+  height: 20px;
+  width: 30px;
+  top: 0;
+  left: 0;
+  border-radius: 15px;
+  background: rgba(252, 76, 3, 1);
+  -moz-transition: .25s ease-in-out;
+  -webkit-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
+}
+
+input#toggle + label:after {
+  content: "";
+  position: absolute;
+  display: block;
+  height: 20px;
+  width: 30px;
+  top: 0;
+  left: 0px;
+  border-radius: 15px;
+  background: white;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 2px 4px rgba(0, 0, 0, .2);
+  -moz-transition: .25s ease-in-out;
+  -webkit-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
+}
+
+input#toggle:checked + label:before {
+  width: 50px;
+  background: rgba(252, 76, 3, 1);
+}
+
+input#toggle:checked + label:after {
+  left: 20px;
+  box-shadow: inset 0 0 0 1px rgba(252, 76, 3, 1), 0 2px 4px rgba(0, 0, 0, .2);
+}
+
+
+</style>
+<body>
+
+<div id="loader_container"></div>
+
+<!-- <input type="checkbox" name="toggle" id="toggle"/>
+  <label for="toggle"></label> -->
+
+<div id="map">
+
+
+
+
+
+  <script src="scripts/L.SvgScaleOverlay.js" type="text/javascript"></script>
+
+
+<!-- <div id="header"></div>  -->
+
+
+
+
+<!-- <input type='button' id='b' value='Toggle Intersections' class="btn"></input> -->
+
+
+
+<script>
+
+// ensure Metro logo loads first
+if(document.images){
+  myimage = new Image(144,127); // width, height
+  myimage.src = "data/Metro.png";
+}
+
+var theMap = (function() {
+
+  // config references
+  var config = {
+    target: 'map'//,
+    //data_url: 'data/SF_weekday_total.json',
+  };
+
+  // loader settings
+  var opts = {
+    lines: 9, // Number of lines to draw
+    length: 9, // Length of each line
+    width: 6, // Line thickness
+    radius: 16, // Radius of inner circle
+    color: '#FC4C02', // #rgb or #rrggbb or array of colors
+    speed: 1.2, // Rounds per second
+    trail: 40, // Afterglow percentage
+    className: 'spinner', // CSS class to assign to the spinner
+  };
+
+  // data/ data view definition
+  var target = document.getElementById(config.target);
+
+  // MAP COMPONENT
+
+  // get base map tiles
+  var mapboxTiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+        attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>'
+    });
+
+  // realize those tiles
+  var map = L.map('map', { zoomControl: false, minZoom: 9, maxZoom: 18})
+    .addLayer(mapboxTiles)
+    .setView([37.780536, -122.42], 13);
+
+  // set min/max zoom levels
+  var minZoom = 9;
+  var maxZoom = 18;
+
+  new L.Control.Zoom({ position: 'topright' }).addTo(map);
+
+  /* Initialize the SVG layer */
+  map._initPathRoot();
+
+  // define svg, hide phantom artifacts on zoom, append svg to group with class "leaflet-zoom-hide"
+  var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+  g = svg.append("g").attr("class", "leaflet-zoom-hide");
+
+  /* We simply pick up the SVG from the map object */
+  var svgNodes = d3.select("#map").select("svg"),
+  gNodes = svgNodes.append("g");
+
+  // add bottom right layer panel for legend
+  var legend = L.control({position: 'bottomright'});
+
+  // add legend to map
+  legend.onAdd = function (map) {var div = L.DomUtil.create('div', 'legend'); return div};
+
+  legend.addTo(map);
+
+  // define svg for legend, append svg to a group with class "key"
+  var svg_Legend = d3.select(".legend.leaflet-control").append("svg")
+    .attr("id", "legend")
+    .attr("width", 550)
+    .attr("height", 80);
+
+  // define group for legend rectangle bars
+  var g_key = svg_Legend.append("g")
+    .attr("class", "key")
+    .attr("transform", "translate(25,25)");
+
+  // define group for legend supplementary text
+  var g_context = svg_Legend.append("g")
+    .attr("class", "context")
+    .attr("transform", "translate(25,25)");
+
+  // add top left layer panel for header
+  var header = L.control({position: 'topleft'});
+
+  // add header to the map
+  header.onAdd = function (map) {var div = L.DomUtil.create('div', 'header'); return div};
+
+  header.addTo(map);
+
+  // // define svg for header, append svg to a group with class "header"
+  // var svg_header = d3.select(".header.leaflet-control").append("svg")
+  //   .attr("id", "header")
+  //   .attr("width", 225)
+  //   .attr("height", 10);
+
+  // var g_header = svg_header.append("g")
+  //   .attr("class", "head");
+
+  //// ADD METRO LOGO
+
+  var LogoHeight = 27, LogoWidth = 144, // Image dimensions
+  width =  144, height = 30; // Dimensions of cropped region
+   
+  // create svg area for Logo
+  var svg_Logo = d3.select(".header.leaflet-control").append("svg")
+    //.attr("width",  width + "px")
+    //.attr("height", height + "px")
+    .attr("viewBox", "0 0 " + width + " " + height)
+    .attr("preserveAspectRatio", "xMidYMid meet");
+
+  // append Metro image to svg
+  svg_Logo.append("image")
+    .attr("id", "logo")
+    .attr("width",  LogoWidth + "px")
+    .attr("height", LogoHeight + "px")
+    .attr("xlink:href","data/Metro.png");
+
+
+  // queue()
+  //       .defer(d3.json, "data/sf_nodes_weekday_total.json")
+  //       .defer(d3.json, "data/SF_weekday_total.json")
+  //       .await(ready);
+
+  //function ready(error, nodes_collection) {
+      
+
+  d3.json("data/sf_nodes_weekday_total.json", function(error, nodes_collection) {
+    
+    var nodes = nodes_collection.features;
+
+    nodes.forEach(function(d) {
+      d.MEDMAXT = +d.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_MEDMAXT;
+      d.ATHCNT = +d.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT;
+      d.LatLng = new L.LatLng(d.geometry.coordinates[1],
+                  d.geometry.coordinates[0])
+    })
+
+    console.log(nodes);
+
+    // create an athlete count filter variable
+    var ATHCNT_filter = nodes.filter(function(d) { return (d.ATHCNT > 0) });
+        console.log("filter", ATHCNT_filter);
+
+
+    // var MEDMEDT_filter = nodes.filter(function(d) { return (d.MEDMAXT > 0) });
+    //     console.log("filter", MEDMEDT_filter);
+
+    // var breaks = (ss.jenks(MEDMEDT_filter.map (function(d) { return d.MEDMAXT; }), 5));
+    //     console.log("breaks", breaks);
+
+    // get min/ max for athlete counts and median max times
+    var Min_ATHCNT = d3.min(ATHCNT_filter, function (d) {
+      return d.ATHCNT;
+    });
+
+    var Max_ATHCNT = d3.max(ATHCNT_filter, function (d) {
+      return d.ATHCNT;
+    });
+
+    var Min_MEDMAXT = d3.min(nodes_collection.features, function (d) {
+      return d.MEDMAXT;
+    });
+
+    var Max_MEDMAXT = d3.max(nodes_collection.features, function (d) {
+      return d.MEDMAXT;
+    });
+
+    //console.log("Min_ATHCNT", Min_ATHCNT);
+    // console.log("Max_ATHCNT", Max_ATHCNT);
+    // console.log("Min_MEDMAXT", Min_MEDMAXT);
+    // console.log("Max_MEDMAXT", Max_MEDMAXT);
+
+    // define custom proportional scale ranges based on zoom scale
+    var radius_9 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([0.05,0.25]);
+
+    var radius_10 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([0.1,0.5]);
+
+    var radius_11 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([0.2,1]);
+
+    var radius_12 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([0.4,2]);
+
+    var radius_Init = d3.scale.linear()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([0.8,4]);
+
+    var radius_14 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([1.6,8]);
+
+    var radius_15 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([2.32,16]);
+
+     var radius_16 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([4.64,32]);
+
+     var radius_17 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([9.2,64]);
+
+     var radius_18 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([18.4,128]);
+
+    var radius_19 = d3.scale.sqrt()
+      .domain([Min_ATHCNT, Max_ATHCNT])
+      .range([36.8,252]);
+
+
+    var NoValueColor = '#238b45';
+    var MinColor = '#54278f';//#0571b0'; 
+    var MinMidColor = '#756bb1';//#92c5de';
+    var MidColor = '#9e9ac8';//#f7f7f7';
+    var MidMaxColor = '#cbc9e2';//#f4a582';
+    var MaxColor = '#f2f0f7';//#ca0020';
+
+    // create quantile color function to map statistic values to colors
+    var color = d3.scale.threshold()
+      .domain([6.5, 18.5, 44, 129, 297]) // these values come jenks classifier
+      .range([MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
+
+    var node_legend = d3.select(".header.leaflet-control").append("g")
+      .attr("class", "node_legend")
+    .attr("transform", "translate(" + (width - 50) + "," + (height - 20) + ")")
+  .selectAll("g")
+    .data([6.5, 18.5, 44, 129])
+  .enter().append("g");
+
+node_legend.append("circle")
+    .attr("cy", function(d) { return -radius_Init(d); })
+    .attr("r", radius_Init);
+
+node_legend.append("text")
+    .attr("y", function(d) { return -2 * radius_Init(d); })
+    .attr("dy", "1.3em")
+    .text(d3.format(".1s"));
+
+    // get current map zoom
+    var currentZoom = map.getZoom();
+
+    // create intersection variable, node data, append circle, radius scale based on zoom level
+    var intersection = gNodes.selectAll("circle")
+      .data(nodes_collection.features.sort(function(a, b) { return b.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT - a.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT; }))
+      .enter().append("circle")
+      .attr("id", "intersection")
+      .style("opacity", 0) // default set to OFF
+      .attr("fill", function (d) {
+        return color(d.MEDMAXT);
+      })
+      .attr("r", function (d) {
+        if (currentZoom == 13)
+        return radius_Init(d.ATHCNT);
+
+        else if (currentZoom == 9)
+        return radius_9(d.ATHCNT);
+
+        else if (currentZoom == 10)
+        return radius_10(d.ATHCNT);
+
+        else if (currentZoom == 11)
+        return radius_11(d.ATHCNT);
+
+        else if (currentZoom == 12)
+        return radius_12(d.ATHCNT);
+
+        else if (currentZoom == 14)
+        return radius_14(d.ATHCNT);
+
+        else if (currentZoom == 15)
+        return radius_15(d.ATHCNT);
+
+        else if (currentZoom == 16)
+        return radius_16(d.ATHCNT);
+
+        else if (currentZoom == 17)
+        return radius_17(d.ATHCNT);
+
+        else if (currentZoom == 18)
+        return radius_18(d.ATHCNT);
+
+        // // Strange tiling issues beyond zoom level 18
+        // else if (currentZoom == 19)
+        // return radius_19(d.ATHCNT);
+
+      });
+    
+    
+    //map.on("viewreset", update);
+    //update function to translate points | Called in zoom end function 
+    update();
+    function update() {
+      intersection.attr("transform", 
+      function(d) { 
+        return "translate("+ 
+          map.latLngToLayerPoint(d.LatLng).x +","+ 
+          map.latLngToLayerPoint(d.LatLng).y +")";
+        }
+      )
+    }
+
+
+    // on zoom end rescale proportional symbols
+    //also re-translate their coordinates update()
+    map.on('zoomend', ze);
+    ze();
+    function ze() {
+      var currentZoom = map.getZoom();
+      var currentRadius = d3.selectAll('circle').attr("r");
+      //console.log("currentRadius", currentRadius);
+      intersection.attr("r", function (d) {
+        if (currentZoom == 13)
+        return radius_Init(d.ATHCNT);
+
+        else if (currentZoom == 9)
+        return radius_9(d.ATHCNT);
+
+        else if (currentZoom == 10)
+        return radius_10(d.ATHCNT);
+
+        else if (currentZoom == 11)
+        return radius_11(d.ATHCNT);
+
+        else if (currentZoom == 12)
+        return radius_12(d.ATHCNT);
+
+        else if (currentZoom == 14)
+        return radius_14(d.ATHCNT);
+
+        else if (currentZoom == 15)
+        return radius_15(d.ATHCNT);
+
+        else if (currentZoom == 16)
+        return radius_16(d.ATHCNT);
+
+        else if (currentZoom == 17)
+        return radius_17(d.ATHCNT);
+
+        else if (currentZoom == 18)
+        return radius_18(d.ATHCNT);
+
+        // // Strange tiling issues beyond zoom level 18
+        // else if (currentZoom == 19)
+        // return radius_19(d.ATHCNT);
+
+      });
+
+      update();
+      console.log("zoomlevel", currentZoom);
+      console.log("maxZ", maxZoom);
+      
+    };  
+
+  });
+
+
+  //// EDGE DATA ////
+
+  // define labels and statistics for dropdown menu
+  var labels = ['Select Statistic', 'Weekday Total Activity Count', 'Weekday Commute Count', 'Weekday Total Athlete Count'];  
+  var statistics = ['Select Statistic', 'weekday_TACTCNT', 'weekday_CMTCNT', 'weekday_TATHCNT']; // these names come straight from variables in geojson
+
+  // select dropdown div, append selectable options, apply labels
+  d3.select(".header.leaflet-control")
+    .append("select")
+    .attr("id", "dropdown")
+    .selectAll("option")
+    .data(statistics)
+    .enter()
+    .append("option")
+    .attr("value", function (d) {
+      return d;
+    })
+    .text(function (d, i) { 
+      return labels[i]; 
+    });
+
+  // select header and left leaflet control 
+  d3.select(".header.leaflet-control")
+    // append toggle
+    .append("foreignObject")
+    .html("<form><input type=checkbox name=toggle id=toggle />Toggle Intersections<label for=toggle></label></form>")
+  
+    // select toggle, define click function to turn intersections on/off
+  d3.select("#toggle").on('click', function() {
+
+    var active = intersection.active ? false : true;
+    var newOpacity = active ? 0.6 : 0;
+    // Hide or show intersections
+    d3.selectAll("#intersection").style("opacity", newOpacity);
+    // Update whether or not the elements are active
+    intersection.active = active;
+  });
+
+
+  // bind statistics defined above to select and create an on change function
+  d3.select("select")
+    .on("change", function () {
+    
+    var statistic = this.options[this.selectedIndex].__data__; // get statistics 
+    //console.log("stat", statistic);
+
+
+    // callback function wrapped for loader in 'init' function
+    function init() {
+
+      // trigger loader
+      var spinner = new Spinner(opts).spin(target);
+
+      // slow the json load intentionally, so we can see it every load
+      //setTimeout(function() {
+
+      //// Load 100% GPS VERIFIED DATAS ////
+      d3.json("data/SF_weekday_total.json", function(error, edges_collection) {
+       
+        //console.log("collection", collection);
+
+        var edge_data = edges_collection.features;
+      
+        console.log("data", edge_data);
+
+        edge_data.forEach(function(d) {
+          // unique ID variable not currently in use
+          d.ID = d.properties.ID; 
+          // define a new stat variable to hold selected stat
+          d.stat = +d.properties[statistic];
+    
+        });
+
+        var filter = edge_data.filter(function(d) { return (d.stat > 0) });
+        console.log("filter", filter);
+
+        // stop spin.js loader
+        spinner.stop();
+        
+      
+        //console.log("d", edge_data);
+
+        // create Min, Max, Median, Mean variables for statistics using FILTERED NON-0 Values
+        var Min = d3.min(filter, function(d) {return d.stat; });
+        var Max = d3.max(filter, function(d) { return d.stat; });
+        var Median = d3.median(filter, function(d) { return d.stat; });
+        var Mean = d3.mean(filter, function(d) { return d.stat; });
+
+        console.log("min", Min);
+        console.log("max", Max);
+        //console.log("median", Median);
+        //console.log("mean", Mean);
+
+        
+        // CLASSIFY DATAS USING NATURAL BREAKS CLASSIFIER
+        //var breaks = (ss.jenks(filter.map (function(d) { return d.stat; }), 5));
+        //console.log("breaks", breaks);
+
+        //console.log("statistic", statistic);
+          
+        // define colors for quantile breaks
+        var NoValueColor = '#238b45';
+        var MinColor = '#0571b0'; 
+        var MinMidColor = '#92c5de';
+        var MidColor = '#f7f7f7';
+        var MidMaxColor = '#f4a582';
+        var MaxColor = '#ca0020';
+
+        // programatic color-data classification mapping | Jenks takes too long to calculate
+        // var color = d3.scale.threshold()
+        //  .domain([breaks[1], breaks[2], breaks[3], breaks[4]])
+        //  .range([MinColor, MinMedColor, MedianColor, MedMaxColor, MaxColor]);
+        
+
+        // create quantile color function to map statistic values to colors
+        var color = d3.scale.threshold()
+          .domain([Min, 2969, 10232, 23272, 43506]) // these values come jenks classifier
+          .range([NoValueColor, MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
+
+        var color_labels = [Min, 2969, 10232, 23272, 43506, Max];
+
+        var color2 = d3.scale.threshold()
+          .domain([Min, 1697, 6237, 14210, 27290]) // these values come jenks classifier
+          .range([NoValueColor, MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
+
+        var color2_labels = [Min, 1697, 6237, 14210, 27290, Max];
+
+        var color3 = d3.scale.threshold()
+          .domain([Min, 520, 1798, 3708, 6187]) // these values come jenks classifier
+          .range([NoValueColor, MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
+
+        var color3_labels = [Min, 520, 1798, 3708, 6187, Max];
+
+    
+        // create linear function to weight stroke width of edges based on statistic 
+        var weightScale = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([0.5, 5]); // values irrelevant in context of the data
+
+        // project points, convert geojson to svg
+        var transform = d3.geo.transform({point: projectPoint}),
+            path = d3.geo.path().projection(transform);
+
+        // select all edges, bind data
+        var appending_edges = g.selectAll("path")
+          .data(edge_data)
+        
+        // enter data, append path, provide "edge" id
+        appending_edges.enter().append("path")
+          .attr("id", "edge");
+      
+        // make paths transitionable between data views
+        appending_edges.transition(1000)
+          // apply edge weight function
+          .style("stroke-width", function (d) {
+            return weightScale(d.stat);
+          })
+          // apply color function // color data values = 0 green
+          .attr("stroke", function (d) {
+            if (statistic == 'weekday_TACTCNT' && d.stat > 0)
+              return color(d.stat);
+            else if (statistic == 'weekday_TACTCNT' && d.stat <= 0)
+              return NoValueColor;
+            else if (statistic == 'weekday_CMTCNT' && d.stat > 0)
+              return color2(d.stat);
+            else if (statistic == 'weekday_CMTCNT' && d.stat <= 0)
+              return NoValueColor;
+            else if (statistic == 'weekday_TATHCNT' && d.stat > 0)
+              return color3(d.stat);
+            else if (statistic == 'weekday_TATHCNT' && d.stat <= 0)
+              return NoValueColor;
+            else if (statistic == 'Select Statistic')
+              return d3.selectAll("#edge").remove();
+          });
+
+        appending_edges.exit().remove();
+      
+        //// HORIZONTAL LEGEND ////
+      
+        // create linear function to map statistics to pixel values
+        var x = d3.scale.linear()
+          .domain([Min, Max])
+          .range([0, 500]); // 500 pixels wide
+
+        // x axis and tic values
+        var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient("top")
+          .tickSize(1)
+          .ticks(Min, Max)
+          .tickValues(function () {
+            if (statistic == 'weekday_TACTCNT') {
+              return color_labels;
+            }
+            else if (statistic == 'weekday_CMTCNT') {
+              return color2_labels;
+            }
+            else if (statistic == 'weekday_TATHCNT') {
+              return color3_labels;
+            }
+            else if (statistic == 'Select Statistic') {
+              return g_key.selectAll("*").remove(),
+              g_context.selectAll("*").remove();
+            };
+        });
+
+      
+        // Legend rectangles
+        var appending_legend = g_key.selectAll("rect")
+          .data(function () {
+            if (statistic == 'weekday_TACTCNT') { 
+              return color.range().map(function(d, i) {
+                return {
+                  x0: i ? x(color.domain()[i-1]) : x.range()[0],
+                  x1: i < color.domain().length ? x(color.domain()[i]) : x.range()[1],
+                  z: d
+                };
+              })
+            }
+            else if (statistic == 'weekday_CMTCNT') {
+              return color2.range().map(function(d, i) {
+                return {
+                  x0: i ? x(color2.domain()[i-1]) : x.range()[0],
+                  x1: i < color2.domain().length ? x(color2.domain()[i]) : x.range()[1],
+                  z: d
+                };
+              })
+            }
+            else if (statistic == 'weekday_TATHCNT') {
+              return color3.range().map(function(d, i) {
+                return {
+                  x0: i ? x(color3.domain()[i-1]) : x.range()[0],
+                  x1: i < color3.domain().length ? x(color3.domain()[i]) : x.range()[1],
+                  z: d
+                };
+              })
+            }
+            // else if (statistic == 'Select Statistic') {
+            //   return {
+                
+            //     x0: 0,
+            //     x1: 0
+                
+            //   }
+            //   g_key.selectAll("*").remove();
+            // }
+            else if (statistic == 'Select Statistic') {
+              
+              return {
+                x0: 0,
+                x1: 0
+              }
+            }
+          });
+
+        appending_legend.enter().append("rect")
+
+        appending_legend.transition(1000)
+          .attr("height", 10)
+          .attr("x", function(d) { return d.x0; })
+          .attr("width", function(d) { return d.x1 - d.x0; })
+          .style("fill", function(d) { return d.z; });
+
+        appending_legend.exit().remove();
+
+        g_key.call(xAxis)
+
+        var context_text = g_context.selectAll("text")
+          .data("text", function () {
+            if (statistic === 'weekday_TACTCNT') {
+              return ("Metro Statistic: Total");
+            }
+            else if (statistic === 'weekday_CMTCNT') {
+              return ("Metro Statistic: Commute");
+            }
+            else if (statistic === 'weekday_TATHCNT') {
+              return ("Metro Statistic: Athlete");
+            }
+            else if (statistic === 'Select Statistic') {
+              return g_context.selectAll(".caption").remove();  
+            }
+          });
+
+        context_text.enter().append("text");
+
+        //console.log("t", statistic.length);
+
+        context_text.transition(1000)
+          .attr("class", "caption")
+          .attr("y", 21)
+          .text(function () {
+            if (statistic === 'weekday_TACTCNT') {
+              return "Metro Statistic: Weekday Total Activity Count"// | " + "Min: " + Min + " | Max: " + Max;  
+            }
+            else if (statistic === 'weekday_CMTCNT') {
+              return "Metro Statistic: Weekday Commute Count"// | " + "Min: " + Min + " | Max: " + Max;
+            }
+            else if (statistic === 'weekday_TATHCNT') {
+              return "Metro Statistic: Weekday Athlete Count"// | " + "Min: " + Min + " | Max: " + Max;
+            }
+            else if (statistic == 'Select Statistic') {
+              return g3.selectAll(".caption").remove(); 
+            }
+          });
+
+        context_text.exit().remove();
+
+
+        // reset map view on zoom
+      map.on("viewreset", reset);
+        // call reset function to realize data paths
+        reset();
+
+            
+        // define reset function
+        function reset() {
+          // compute projected bounding box
+          var bounds = path.bounds(edges_collection),
+            topLeft = bounds[0],
+            bottomRight = bounds[1];
+
+          // set SVG dimensions w/ padding to display features
+          // above or to the left of the origin
+          svg .attr("width", bottomRight[0] - topLeft[0])
+              .attr("height", bottomRight[1] - topLeft[1])
+              .style("left", topLeft[0] + "px")
+              .style("top", topLeft[1] + "px");
+
+          g   .attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+          // initialize path data by setting d attribute
+          appending_edges.attr("d", path)
+      
+        } 
+
+        // adapts Leaflet's latLngToLayerPoint and LatLng methods
+        // to project a single point; resulting coordinates are
+        // passed to an output geometry stream
+        function projectPoint(x,y) {
+          var point = map.latLngToLayerPoint(new L.LatLng(y,x));
+          this.stream.point(point.x, point.y);
+        } 
+
+      });
+
+      // }, 10);
+
+    } 
+
+  init();
+
+}); 
+
+return theMap;
+
+}());     
+
+
+
+
+
+  // // Add toggle for showing intersections
+  // d3.select(".header.leaflet-control").append("text")
+  //   .attr("id", "nodeToggle")
+  //   //.attr("x", 5)             
+  //   .attr("y", 100)    
+  //   .style("fill", "pink")         
+  //   .on("click", function() {
+  //     // Determine if current line is visible
+  //     var active   = nodes.active ? false : true,
+  //       newOpacity = active ? 0.6 : 0;
+  //       // Hide or show the elements
+  //       d3.selectAll("#nodes").style("opacity", newOpacity);
+  //       // Update whether or not the elements are active
+  //       nodes.active = active;
+  //     })
+  //   .text("Toggle Intersections");
+
+
+
+
+
+  
+
+
+  
+
+</script>
