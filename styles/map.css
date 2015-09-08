@@ -1,0 +1,23 @@
+html, body {
+        height: 100%;
+        width: 100%;
+    }
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+svg {
+	fill: none;
+  position: relative;
+}
+
+path {
+  /*stroke: #fff;*/
+  stroke-width: 1.5px;
+}
+
+path:hover {
+  stroke: green;
+}

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Examples</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <link href="" rel="stylesheet">
+    <style type="text/css">
+    path.line {
+        fill: none;
+        stroke-width: 2px;
+    }
+    path.domain {
+        fill: none;
+        stroke: black;
+        stroke-width: 1px;
+        shape-rendering: crispEdges;
+    }
+    .choosen {
+        fill: none;
+        stroke: green;
+        stroke-width: 2px;
+        shape-rendering: crispEdges;
+    }
+    text {
+        font-family: arial;
+    }
+    </style>
+
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+</head>
+
+<body>
+    <div id="dropDown"></div>
+    <div id="chart"></div>
+
+</body>
+<script type="text/javascript">
+var margin = {
+    top: 20,
+    right: 30,
+    bottom: 30,
+    left: 60
+},
+    width = 960 - margin.left - margin.right,
+    height = 350 - margin.top - margin.bottom;
+
+var edgeData;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .tickFormat(d3.format(".0f"))
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .tickFormat(d3.format(",.0f"))
+    .orient("left");
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var line = d3.svg.line()
+    .interpolate("linear")
+    .x(function(d) {
+        return x(+d.ID);
+    })
+    .y(function(d) {
+        return y(+d.thing);
+    });
+
+
+d3.json("data/SF_weekday_total.json", function(error, collection) {
+
+    var data = collection.features;
+
+    var statistics = d3.keys(data.properties[0]).filter(function(key) {
+        return key !== "ID";
+    });
+
+    console.log("statistics", statistics);
+
+    var stats = statistics.map(function(stat) {
+        return {
+            stat: stat,
+            values: collection.map(function(d) {
+                return {
+                    ID: d.properties.ID,
+                    thing: +d[stat]
+                };
+            })
+        };
+    });
+
+    edgeData = stats;
+    console.log("stats", stats);
+
+    // d3.select("#dropDown")
+    //     .append("select")
+    //     .on("change", function() {
+    //         change(this.options[this.selectedIndex].__data__);
+    //     })
+    //     .selectAll("option")
+    //     .data(names.filter(function(d) {
+    //         return d !== "United States";
+    //     })).enter()
+    //     .append("option")
+    //     .text(function(d) {
+    //         return d;
+    //     });
+
+    // x.domain(d3.extent(dataset, function(d, i) {
+    //     return +d.Date;
+    // }));
+
+    // svg.append("g")
+    //     .attr("class", "x axis")
+    //     .attr("transform", "translate(0," + height + ")")
+    //     .call(xAxis);
+
+    // svg.append("g")
+    //     .attr("class", "y axis")
+    //     .call(yAxis);
+
+    // var stateLines = svg.selectAll(".states")
+    //     .data(states).enter()
+    //     .append("path")
+    //     .attr("class", "line")
+    //     .attr("d", function(d) {
+    //         return line(d.values);
+    //     })
+    //     .attr("stroke", function(d, i) {
+    //         return (d.name === "United States") ? "orange" : "grey";
+    //     });
+
+    // var usFilter = stateFilter("United States");
+
+    // var maxUS = dataMax(usFilter);
+
+    // change("Alabama");
+
+    // function change(x) {
+
+    //     var data = stateFilter(x);
+
+    //     var maxNew = Math.max(dataMax(data), maxUS);
+
+    //     var greenLine = svg.selectAll(".choosen")
+    //         .data(data);
+
+    //     y.domain([0, maxNew]);
+
+    //     greenLine.transition()
+    //         .duration(2000)
+    //         .attr("d", function(d) {
+    //             return line(d.values);
+    //         });
+
+    //     greenLine.enter().append("path")
+    //         .attr("class", "choosen")
+    //         .attr("d", function(d) {
+    //             return line(d.values);
+    //         });
+
+    //     stateLines.transition().duration(2000)
+    //         .attr("d", function(d) {
+    //             return line(d.values);
+    //         });
+
+    //     greenLine.exit()
+    //         .transition()
+    //         .duration(2000)
+    //         .remove();
+
+    //     svg.selectAll(".y")
+    //         .transition().duration(2000)
+    //         .call(yAxis.scale(y));
+    // }
+
+    // function dataMax(x) {
+    //     var maxer;
+    //     d3.max(x, function(d) {
+    //         var temp = [];
+    //         d.values.forEach(function(e, j) {
+    //             temp[j] = e.thing;
+    //         })
+    //         maxer = Math.max.apply(null, temp);
+    //     });
+    //     return maxer;
+    // }
+
+    // function stateFilter(x) {
+    //     var ans = states.filter(function(d) {
+    //         return d.name === x;
+    //     });
+    //     return ans
+    // }
+})
+</script>
+
+</html>
