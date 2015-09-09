@@ -159,7 +159,7 @@ input#toggle:checked + label:after {
   stroke: black;
 }
 
-.node_legend text {
+.intersection_legend text {
   fill: #777;
   font: 10px sans-serif;
   text-anchor: middle;
@@ -402,22 +402,19 @@ var dataView = (function() {
     // get current map zoom
     var currentZoom = map.getZoom();
 
-    var intersectionLegend = gNodesLegend.selectAll("circle")
+    // PROPORTIONAL SYMBOL LEGEND
+    var intersectionLegend = d3.select(".header.leaflet-control").append("svg").append("g")
+      .attr("class", "node_legend")
+      .attr("id", "intersectionLegend")
+      .style("opacity", 0) // default set to 0
+      .attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
+      .selectAll("g")
       .data([1, 583, 1912, 3905, 6551, 11185])
-      
-      
-      //.attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
+      .enter().append("g");
 
-    // var node_legend = d3.select(".header.leaflet-control").append("svg").append("g")
-    //   .attr("class", "node_legend")
-    //   .attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
-    //   .selectAll("g")
-    //   .data([1, 583, 1912, 3905, 6551, 11185])
-    //   .enter().append("g");
-
-    .enter().append("circle")
-    .attr("class", "node_legend")
-    .attr("fill", "black")
+    intersectionLegend.append("circle")
+      .attr("class", "node_legend")
+      .attr("fill", "black")
       .attr("cy", function (d) {
         if (currentZoom == 13)
         return -radius_Init(d);
@@ -449,8 +446,7 @@ var dataView = (function() {
         else if (currentZoom == 18)
         return -radius_18(d);
 
-      })
-        
+      }) 
       .attr("r", function (d) {
         if (currentZoom == 13)
         return radius_Init(d);
@@ -483,14 +479,53 @@ var dataView = (function() {
         return radius_18(d);
 
       });
-//     
 
-//   node_legend.transition(1000);
+    // var inersectionLegend_text = intersectionLegend.append("text")
+    //   .data([1, 583, 1912, 3905, 6551, 11185]);
+    
+    //inersectionLegend_text.enter().append("text");
 
-// node_legend.append("text")
-//     .attr("y", function(d) { return -2 * radius_14(d); })
-//     .attr("dy", "1.3em")
-//     .text(d3.format(".1s"));
+    //// PROPORTIONAL SYMBOL LEGEND TEXT
+    //inersectionLegend_text.transition()
+    intersectionLegend.append("text")
+      .attr("class", "intersection_legend")
+      .attr("id", "intersectionLegend")
+      .style("opacity", 0) // default set to 0
+     // .attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
+      //.style("fill", "black")
+      .attr("y", function(d) { 
+        if (currentZoom == 13)
+        return -2 * radius_Init(d);
+
+        else if (currentZoom == 9)
+        return -2 * radius_9(d);
+
+        else if (currentZoom == 10)
+        return -2 * radius_10(d);
+
+        else if (currentZoom == 11)
+        return -2 * radius_11(d);
+
+        else if (currentZoom == 12)
+        return -2 * radius_12(d);
+
+        else if (currentZoom == 14)
+        return -2 * radius_14(d);
+
+        else if (currentZoom == 15)
+        return -2 * radius_15(d);
+
+        else if (currentZoom == 16)
+        return -2 * radius_16(d);
+
+        else if (currentZoom == 17)
+        return -2 * radius_17(d);
+
+        else if (currentZoom == 18)
+        return  -2 * radius_18(d);
+      })
+      .attr("dy", "1.3em")
+      .text(d3.format(".1s"));
 
     
     // create intersection variable, node data, append circle, radius scale based on zoom level
@@ -533,10 +568,6 @@ var dataView = (function() {
         else if (currentZoom == 18)
         return radius_18(d.ATHCNT);
 
-        // // Strange tiling issues beyond zoom level 18
-        // else if (currentZoom == 19)
-        // return radius_19(d.ATHCNT);
-
       });
     
     
@@ -560,76 +591,108 @@ var dataView = (function() {
     ze();
     function ze() {
       var currentZoom = map.getZoom();
-      var currentRadius = d3.selectAll('circle').attr("r");
-      //console.log("currentRadius", currentRadius);
-      intersectionLegend.transition()
-      .attr("fill", "green")
-      .style("opacity", 1)
-      .attr("cy", function (d) {
+      //var currentRadius = d3.selectAll('circle').attr("r");
+      
+      intersectionLegend.selectAll("circle").transition().ease("linear").duration(750)
+        .style("opacity", 1)
+        .attr("cy", function (d) {
+          if (currentZoom == 13)
+            return -radius_Init(d);
+
+          else if (currentZoom == 9)
+          return -radius_9(d);
+
+          else if (currentZoom == 10)
+          return -radius_10(d);
+
+          else if (currentZoom == 11)
+          return -radius_11(d);
+
+          else if (currentZoom == 12)
+          return -radius_12(d);
+
+          else if (currentZoom == 14)
+          return -radius_14(d);
+
+          else if (currentZoom == 15)
+          return -radius_15(d);
+
+          else if (currentZoom == 16)
+          return -radius_16(d);
+
+          else if (currentZoom == 17)
+          return -radius_17(d);
+
+          else if (currentZoom == 18)
+          return -radius_18(d);
+
+        })
+        .attr("r", function (d) {
+          if (currentZoom == 13)
+          return radius_Init(d);
+
+          else if (currentZoom == 9)
+          return radius_9(d);
+
+          else if (currentZoom == 10)
+          return radius_10(d);
+
+          else if (currentZoom == 11)
+          return radius_11(d);
+
+          else if (currentZoom == 12)
+          return radius_12(d);
+
+          else if (currentZoom == 14)
+          return radius_14(d);
+
+          else if (currentZoom == 15)
+          return radius_15(d);
+
+          else if (currentZoom == 16)
+          return radius_16(d);
+
+          else if (currentZoom == 17)
+          return radius_17(d);
+
+          else if (currentZoom == 18)
+          return radius_18(d);
+
+        });
+
+      intersectionLegend.selectAll("text").transition().ease("linear").duration(750)
+        .attr("y", function(d) { 
         if (currentZoom == 13)
-        return -radius_Init(d);
+        return -2 * radius_Init(d);
 
         else if (currentZoom == 9)
-        return -radius_9(d);
+        return -2 * radius_9(d);
 
         else if (currentZoom == 10)
-        return -radius_10(d);
+        return -2 * radius_10(d);
 
         else if (currentZoom == 11)
-        return -radius_11(d);
+        return -2 * radius_11(d);
 
         else if (currentZoom == 12)
-        return -radius_12(d);
+        return -2 * radius_12(d);
 
         else if (currentZoom == 14)
-        return -radius_14(d);
+        return -2 * radius_14(d);
 
         else if (currentZoom == 15)
-        return -radius_15(d);
+        return -2 * radius_15(d);
 
         else if (currentZoom == 16)
-        return -radius_16(d);
+        return -2 * radius_16(d);
 
         else if (currentZoom == 17)
-        return -radius_17(d);
+        return -2 * radius_17(d);
 
         else if (currentZoom == 18)
-        return -radius_18(d);
-
-      })
-        
-      .attr("r", function (d) {
-        if (currentZoom == 13)
-        return radius_Init(d);
-
-        else if (currentZoom == 9)
-        return radius_9(d);
-
-        else if (currentZoom == 10)
-        return radius_10(d);
-
-        else if (currentZoom == 11)
-        return radius_11(d);
-
-        else if (currentZoom == 12)
-        return radius_12(d);
-
-        else if (currentZoom == 14)
-        return radius_14(d);
-
-        else if (currentZoom == 15)
-        return radius_15(d);
-
-        else if (currentZoom == 16)
-        return radius_16(d);
-
-        else if (currentZoom == 17)
-        return radius_17(d);
-
-        else if (currentZoom == 18)
-        return radius_18(d);
-
+        return  -2 * radius_18(d);
       });
+
       
 
       intersection.attr("r", function (d) {
@@ -662,10 +725,6 @@ var dataView = (function() {
 
         else if (currentZoom == 18)
         return radius_18(d.ATHCNT);
-
-        // // Strange tiling issues beyond zoom level 18
-        // else if (currentZoom == 19)
-        // return radius_19(d.ATHCNT);
 
       });
 
@@ -711,13 +770,13 @@ var dataView = (function() {
     var newOpacity = active ? 0.6 : 0;
     // Hide or show intersections
     d3.selectAll("#intersection").style("opacity", newOpacity);
+    d3.selectAll("#intersectionLegend").style("opacity", newOpacity);
     // Update whether or not the elements are active
     intersection.active = active;
+
   });
 
-  // define node legend svg layer
-  var svgNodesLegend = d3.select(".header.leaflet-control").append("svg"),
-    gNodesLegend = svgNodesLegend.append("g");
+  
 
 
 
@@ -834,7 +893,7 @@ var dataView = (function() {
           .attr("id", "edge");
       
         // make paths transitionable between data views
-        appending_edges.transition(1000)
+        appending_edges.transition()
           // apply edge weight function
           .style("stroke-width", function (d) {
             return weightScale(d.stat);
@@ -883,10 +942,11 @@ var dataView = (function() {
               return color3_labels;
             }
             else if (statistic == 'Select Statistic') {
-              return g_key.selectAll("*").remove(),
-              g_context.selectAll("*").remove();
+              return "";
             };
         });
+
+        g_key.call(xAxis)
 
       
         // Legend rectangles
@@ -919,17 +979,7 @@ var dataView = (function() {
                 };
               })
             }
-            // else if (statistic == 'Select Statistic') {
-            //   return {
-                
-            //     x0: 0,
-            //     x1: 0
-                
-            //   }
-            //   g_key.selectAll("*").remove();
-            // }
             else if (statistic == 'Select Statistic') {
-              
               return {
                 x0: 0,
                 x1: 0
@@ -939,7 +989,7 @@ var dataView = (function() {
 
         appending_legend.enter().append("rect")
 
-        appending_legend.transition(1000)
+        appending_legend.transition().ease("linear").duration(750)
           .attr("height", 10)
           .attr("x", function(d) { return d.x0; })
           .attr("width", function(d) { return d.x1 - d.x0; })
@@ -947,7 +997,7 @@ var dataView = (function() {
 
         appending_legend.exit().remove();
 
-        g_key.call(xAxis)
+        
 
         var context_text = g_context.selectAll("text")
           .data("text", function () {
@@ -961,13 +1011,11 @@ var dataView = (function() {
               return ("Metro Statistic: Athlete");
             }
             else if (statistic === 'Select Statistic') {
-              return g_context.selectAll(".caption").remove();  
+              return "";  
             }
           });
 
         context_text.enter().append("text");
-
-        //console.log("t", statistic.length);
 
         context_text.transition(1000)
           .attr("class", "caption")
@@ -983,7 +1031,7 @@ var dataView = (function() {
               return "Metro Statistic: Weekday Athlete Count"// | " + "Min: " + Min + " | Max: " + Max;
             }
             else if (statistic == 'Select Statistic') {
-              return g3.selectAll(".caption").remove(); 
+              return ""; 
             }
           });
 
@@ -991,7 +1039,7 @@ var dataView = (function() {
 
 
         // reset map view on zoom
-      map.on("viewreset", reset);
+        map.on("viewreset", reset);
         // call reset function to realize data paths
         reset();
 
@@ -1005,12 +1053,12 @@ var dataView = (function() {
 
           // set SVG dimensions w/ padding to display features
           // above or to the left of the origin
-          svg .attr("width", bottomRight[0] - topLeft[0])
-              .attr("height", bottomRight[1] - topLeft[1])
-              .style("left", topLeft[0] + "px")
-              .style("top", topLeft[1] + "px");
+          svg.attr("width", bottomRight[0] - topLeft[0])
+            .attr("height", bottomRight[1] - topLeft[1])
+            .style("left", topLeft[0] + "px")
+            .style("top", topLeft[1] + "px");
 
-          g   .attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+          g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
 
           // initialize path data by setting d attribute
           appending_edges.attr("d", path)
