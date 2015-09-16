@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
   <script src="scripts/d3.min.js" type="text/javascript"></script>
   <script src="scripts/d3.tip.js" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
@@ -11,53 +10,13 @@
   <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
   <script src="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js"></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js'></script>
+
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
   <link rel="stylesheet" href="styles/map.css" />
   <link rel="stylesheet" href="https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.css" />
 </head>
 
 <style>
-
-#logo {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#dropdown {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#nodeToggle {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#map {
-  width: 100%;
-  height: 100%;
-}
-
-svg {
-  fill: none;
-  position: relative;
-}
-
-path {
-  stroke-width: 1.5px;
-}
-
-path:hover {
-  stroke-opacity: 50%;
-}
-
-.key line, text {
-  stroke: #000;
-  shape-rendering: crispEdges;
-  font-size: 10px; 
-}
 
 .context line, text {
   fill: #000;
@@ -65,36 +24,49 @@ path:hover {
   font-size: 10px; 
 }
 
+
+div.tooltip {
+  position: absolute; 
+  text-align: left; 
+  width: 220px;  
+  height: 35px;   
+  padding: 3px; 
+  font: 12px sans-serif;  
+  background: white; 
+  border: 0px;          
+  border-radius: 8px;
+ /*  pointer-events: none;  This line needs to be removed */
+  
+}
+
+#dropdown {
+  padding: 100px 100px 100px 100px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#edge:hover {
+  stroke-opacity: 1;
+  /*pointer-events: none;*/
+}
+
 .header {
-    padding: 0px 5px 10px 5px;
-    top: 5px;
-    /*font: 13px sans-serif;*/
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  padding: 0px 5px 10px 5px;
+  top: 5px;
+  /*font: 13px sans-serif;*/
+  background: white;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  border-radius: 5px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.legend {
-    padding: 0px 10px;
-    top: 10px;
-    right: 15px;
-    font: 10px sans-serif;
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-}
-
-.key path {
-  display: none;
-}
-
-#edge2 {
-  stroke: green;
+.header_text {
+  font: 6px sans-serif;
+  stroke: none;
 }
 
 input#toggle {
@@ -154,7 +126,12 @@ input#toggle:checked + label:after {
   box-shadow: inset 0 0 0 1px rgba(252, 76, 3, 1), 0 2px 4px rgba(0, 0, 0, .2);
 }
 
-.node_legend circle {
+#intersection:hover {
+  opacity: 1;
+  stroke: white;
+}
+
+.intersection_legend circle {
   fill: none;
   stroke: black;
 }
@@ -165,6 +142,49 @@ input#toggle:checked + label:after {
   text-anchor: middle;
 }
 
+.key path {
+  display: none;
+}
+
+.key fill, text {
+  fill: #000;
+  shape-rendering: crispEdges;
+  font-size: 10px; 
+}
+
+.legend {
+  padding: 0px 10px;
+  top: 10px;
+  right: 15px;
+  font: 10px sans-serif;
+  background: white;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  border-radius: 5px;
+}
+
+#logo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+#nodeToggle {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+svg {
+  fill: none;
+  position: relative;
+}
+
 </style>
 
 <body>
@@ -173,20 +193,18 @@ input#toggle:checked + label:after {
 
 <div id="map">
 
-<script src="scripts/L.SvgScaleOverlay.js" type="text/javascript"></script>
-
 <script>
 
 // ensure Metro logo loads first
 if(document.images){
-  myimage = new Image(144,127); // width, height
-  myimage.src = "data/Metro.png";
+  image = new Image(144,127); // width, height
+  image.src = "data/Metro.png";
 }
 
 //// DEFINE FUNCTION VARIABLE FOR DATA VIEW ////
 var dataView = (function() {
 
-  // config references
+  // config references for load spinner
   var config = {
     target: 'map'//,
     //data_url: 'data/SF_weekday_total.json',
@@ -204,33 +222,39 @@ var dataView = (function() {
     className: 'spinner', // CSS class to assign to the spinner
   };
 
-  // data/ data view definition
+  // loader target
   var target = document.getElementById(config.target);
 
-  // MAP COMPONENT
+
+  //// MAP COMPONENT ////
 
   // get base map tiles
   var mapboxTiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
         attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>'
-    });
+  });
 
   // realize those tiles
   var map = L.map('map', { zoomControl: false, minZoom: 9, maxZoom: 18})
     .addLayer(mapboxTiles)
     .setView([37.780536, -122.42], 13);
 
+  // position zoom control in top right
   new L.Control.Zoom({ position: 'topright' }).addTo(map);
 
-  // Initialize the SVG layer 
-  map._initPathRoot();
-
+  // Initialize the SVG layer //
+  map._initPathRoot()    
+  
   // define svg, hide phantom artifacts on zoom, append svg to group with class "leaflet-zoom-hide"
   var svg = d3.select(map.getPanes().overlayPane).append("svg"),
   g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
   // define node svg layer
-  var svgNodes = d3.select("#map").select("svg"),
-  gNodes = svgNodes.append("g");
+  // var svgNodes = d3.select("#map").select("svg"),
+  // gNodes = svgNodes.append("g");
+
+  // // define node svg layer
+  // var svgEdges = d3.select("#map").select("svg"),
+  // gEdges = svgEdges.append("g");
 
   // add bottom right layer panel for legend
   var legend = L.control({position: 'bottomright'});
@@ -240,11 +264,14 @@ var dataView = (function() {
 
   legend.addTo(map);
 
-  // define svg for legend, append svg to a group with class "key"
+  // define svg for EDGE legend, append svg to a group with class "key"
   var svg_Legend = d3.select(".legend.leaflet-control").append("svg")
     .attr("id", "legend")
+    //.style("opacity", 0)
     .attr("width", 550)
     .attr("height", 80);
+
+  d3.select(".legend.leaflet-control").style("opacity", 0);
 
   // define group for legend rectangle bars
   var g_key = svg_Legend.append("g")
@@ -256,11 +283,12 @@ var dataView = (function() {
     .attr("class", "context")
     .attr("transform", "translate(25,25)");
 
+
   // add top left layer panel for header
   var header = L.control({position: 'topleft'});
 
   // add header to the map
-  header.onAdd = function (map) {var div = L.DomUtil.create('div', 'header'); return div};
+  header.onAdd = function (map) {var header = L.DomUtil.create('div', 'header'); return header};
 
   header.addTo(map);
 
@@ -268,19 +296,84 @@ var dataView = (function() {
   //// ADD METRO LOGO
 
   var LogoHeight = 27, LogoWidth = 144, // Image dimensions
-  width =  144, height = 30; // Dimensions of cropped region
+  width =  144, height = 35; // Dimensions of cropped region
    
   // create svg area for Logo
-  var svg_Logo = d3.select(".header.leaflet-control").append("svg")
+  var svg_header = d3.select(".header.leaflet-control").append("svg")
     .attr("viewBox", "0 0 " + width + " " + height)
     .attr("preserveAspectRatio", "xMidYMid meet");
 
   // append Metro image to svg
-  svg_Logo.append("image")
+  svg_header.append("image")
     .attr("id", "logo")
     .attr("width",  LogoWidth + "px")
     .attr("height", LogoHeight + "px")
     .attr("xlink:href","data/Metro.png");
+
+
+  svg_header.append("text")
+    .attr("class", "header_text")
+    .text("Currently Viewing: Weekday Rollup - Totals")
+    .attr("x", 9)
+    .attr("y", 30);
+
+
+  // Define div for tooltips
+  var tooltip = d3.select("#map")
+    .append("div") // declare the tooltip div 
+    .attr("class", "tooltip") // apply the 'tooltip' class
+    .style("opacity", 0); // default to transparent
+
+  // project 100% GPS VERIFIED DATA POINTS, convert geojson to svg
+  var transform = d3.geo.transform({point: projectPoint}),
+      path = d3.geo.path().projection(transform);
+
+  // adapts Leaflet's latLngToLayerPoint and LatLng methods
+  // to project a single point; resulting coordinates are
+  // passed to an output geometry stream
+  function projectPoint(x,y) {
+    var point = map.latLngToLayerPoint(new L.LatLng(y,x));
+    this.stream.point(point.x, point.y);
+  } 
+
+  // get current map zoom
+  var currentZoom = map.getZoom();
+
+  // Function for moving layers to the front
+  d3.selection.prototype.moveToFront = function() {
+    return this.each(function(){
+      this.parentNode.appendChild(this);
+    });
+  };
+
+  // Function for moving layers to the back -- NOT IN USE
+  d3.selection.prototype.moveToBack = function() { 
+    return this.each(function() { 
+      var firstChild = this.parentNode.firstChild; 
+      if (firstChild) { 
+        this.parentNode.insertBefore(this, firstChild); 
+      } 
+    }); 
+  };
+
+  // define labels and statistics for dropdown menu
+  var labels = ['Select Statistic', 'Weekday Total Activity Count', 'Weekday Commute Count', 'Weekday Total Athlete Count'];  
+  var statistics = ['Select Statistic', 'weekday_TACTCNT', 'weekday_CMTCNT', 'weekday_TATHCNT']; // these names come straight from variables in geojson
+
+  // select dropdown div, append selectable options, apply labels
+  d3.select(".header.leaflet-control")
+    .append("select")
+    .attr("id", "dropdown")
+    .selectAll("option")
+    .data(statistics)
+    .enter()
+    .append("option")
+    .attr("value", function (d) {
+      return d;
+    })
+    .text(function (d, i) { 
+      return labels[i]; 
+    });
 
 
   // queue()
@@ -289,9 +382,12 @@ var dataView = (function() {
   //       .await(ready);
 
   //function ready(error, nodes_collection) {
+
       
   // GET 100% GPS VERIFIED INTERSECTION DATA
   d3.json("data/sf_nodes_weekday_total.json", function(error, nodes_collection) {
+
+    // console.log("nodes_collection", nodes_collection);
     
     var nodes = nodes_collection.features;
 
@@ -302,11 +398,12 @@ var dataView = (function() {
                   d.geometry.coordinates[0])
     })
 
-    console.log(nodes);
+    console.log("nodes", nodes);
 
     // create an athlete count > 0 filter variable
     var ATHCNT_filter = nodes.filter(function(d) { return (d.ATHCNT > 0) });
-        console.log("filter", ATHCNT_filter);
+    
+    // console.log("filter", ATHCNT_filter);
 
 
     // var MEDMEDT_filter = nodes.filter(function(d) { return (d.MEDMAXT > 0) });
@@ -328,15 +425,15 @@ var dataView = (function() {
       return d.ATHCNT;
     });
 
-    var Min_MEDMAXT = d3.min(nodes_collection.features, function (d) {
+    var Min_MEDMAXT = d3.min(nodes, function (d) {
       return d.MEDMAXT;
     });
 
-    var Max_MEDMAXT = d3.max(nodes_collection.features, function (d) {
+    var Max_MEDMAXT = d3.max(nodes, function (d) {
       return d.MEDMAXT;
     });
 
-    //console.log("Min_ATHCNT", Min_ATHCNT);
+    // console.log("Min_ATHCNT", Min_ATHCNT);
     // console.log("Max_ATHCNT", Max_ATHCNT);
     // console.log("Min_MEDMAXT", Min_MEDMAXT);
     // console.log("Max_MEDMAXT", Max_MEDMAXT);
@@ -344,236 +441,85 @@ var dataView = (function() {
     // define custom proportional scale ranges based on zoom scale
     var radius_9 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([0.05,0.25]);
+      .range([0.15,0.75]);
 
     var radius_10 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([0.1,0.5]);
+      .range([0.2,1]);
 
     var radius_11 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([0.2,1]);
+      .range([0.4,2]);
 
     var radius_12 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([0.4,2]);
+      .range([0.75,4]);
 
     var radius_Init = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([0.8,4]);
+      .range([0.75,4]);
 
     var radius_14 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([1.6,8]);
+      .range([1.15,8]);
 
     var radius_15 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([2.32,16]);
+      .range([2.36,16.41]);
 
-     var radius_16 = d3.scale.sqrt()
+    var radius_16 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([4.64,32]);
+      .range([4.64,32.27]);
 
      var radius_17 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([9.2,64]);
+      .range([6.92,48.14]);
 
      var radius_18 = d3.scale.sqrt()
       .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([18.4,128]);
-
-    var radius_19 = d3.scale.sqrt()
-      .domain([Min_ATHCNT, Max_ATHCNT])
-      .range([36.8,252]);
+      .range([9.2,64]);
 
 
     var NoValueColor = '#238b45';
-    var MinColor = '#54278f';//#0571b0'; 
-    var MinMidColor = '#756bb1';//#92c5de';
-    var MidColor = '#9e9ac8';//#f7f7f7';
-    var MidMaxColor = '#cbc9e2';//#f4a582';
-    var MaxColor = '#f2f0f7';//#ca0020';
+    var MinColor = '#4d004b';//#0571b0'; 
+    var MinMidColor = '#88419d';//#92c5de';
+    var MidColor = '#8c96c6';//#f7f7f7';
+    var MidMaxColor = '#bfd3e6';//#f4a582';
+    var MaxColor = '#f7fcfd';//#ca0020';
 
     // create quantile color function to map statistic values to colors
     var color = d3.scale.threshold()
-      .domain([6.5, 18.5, 44, 129, 297]) // these values come jenks classifier
+      .domain([6.5, 18.5, 44, 129, 297]) // these values come from jenks classifier
       .range([MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
 
-    // get current map zoom
-    var currentZoom = map.getZoom();
 
     // PROPORTIONAL SYMBOL LEGEND
-    var intersectionLegend = d3.select(".header.leaflet-control").append("svg").append("g")
-      .attr("class", "node_legend")
-      .attr("id", "intersectionLegend")
-      .style("opacity", 0) // default set to 0
-      .attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
-      .selectAll("g")
-      .data([1, 583, 1912, 3905, 6551, 11185])
-      .enter().append("g");
 
     intersectionLegend.append("circle")
-      .attr("class", "node_legend")
-      .attr("fill", "black")
-      .attr("cy", function (d) {
-        if (currentZoom == 13)
-        return -radius_Init(d);
+      .attr("class", "intersection_legend");
 
-        else if (currentZoom == 9)
-        return -radius_9(d);
-
-        else if (currentZoom == 10)
-        return -radius_10(d);
-
-        else if (currentZoom == 11)
-        return -radius_11(d);
-
-        else if (currentZoom == 12)
-        return -radius_12(d);
-
-        else if (currentZoom == 14)
-        return -radius_14(d);
-
-        else if (currentZoom == 15)
-        return -radius_15(d);
-
-        else if (currentZoom == 16)
-        return -radius_16(d);
-
-        else if (currentZoom == 17)
-        return -radius_17(d);
-
-        else if (currentZoom == 18)
-        return -radius_18(d);
-
-      }) 
-      .attr("r", function (d) {
-        if (currentZoom == 13)
-        return radius_Init(d);
-
-        else if (currentZoom == 9)
-        return radius_9(d);
-
-        else if (currentZoom == 10)
-        return radius_10(d);
-
-        else if (currentZoom == 11)
-        return radius_11(d);
-
-        else if (currentZoom == 12)
-        return radius_12(d);
-
-        else if (currentZoom == 14)
-        return radius_14(d);
-
-        else if (currentZoom == 15)
-        return radius_15(d);
-
-        else if (currentZoom == 16)
-        return radius_16(d);
-
-        else if (currentZoom == 17)
-        return radius_17(d);
-
-        else if (currentZoom == 18)
-        return radius_18(d);
-
-      });
-
-    // var inersectionLegend_text = intersectionLegend.append("text")
-    //   .data([1, 583, 1912, 3905, 6551, 11185]);
-    
-    //inersectionLegend_text.enter().append("text");
 
     //// PROPORTIONAL SYMBOL LEGEND TEXT
-    //inersectionLegend_text.transition()
     intersectionLegend.append("text")
       .attr("class", "intersection_legend")
-      .attr("id", "intersectionLegend")
       .style("opacity", 0) // default set to 0
      // .attr("transform", "translate(" + (width - 50) + "," + (height + 100) + ")")
-      //.style("fill", "black")
-      .attr("y", function(d) { 
-        if (currentZoom == 13)
-        return -2 * radius_Init(d);
-
-        else if (currentZoom == 9)
-        return -2 * radius_9(d);
-
-        else if (currentZoom == 10)
-        return -2 * radius_10(d);
-
-        else if (currentZoom == 11)
-        return -2 * radius_11(d);
-
-        else if (currentZoom == 12)
-        return -2 * radius_12(d);
-
-        else if (currentZoom == 14)
-        return -2 * radius_14(d);
-
-        else if (currentZoom == 15)
-        return -2 * radius_15(d);
-
-        else if (currentZoom == 16)
-        return -2 * radius_16(d);
-
-        else if (currentZoom == 17)
-        return -2 * radius_17(d);
-
-        else if (currentZoom == 18)
-        return  -2 * radius_18(d);
-      })
       .attr("dy", "1.3em")
       .text(d3.format(".1s"));
 
     
     // create intersection variable, node data, append circle, radius scale based on zoom level
-    var intersection = gNodes.selectAll("circle")
-      .data(nodes_collection.features.sort(function(a, b) { return b.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT - a.properties.sf_osm_edges_nodes_ride_rollup_total_weekday_ATHCNT; }))
+    var intersection = g.selectAll("circle")
+      .data(nodes.sort(function(a, b) { return b.ATHCNT - a.ATHCNT; }))
       .enter().append("circle")
       .attr("id", "intersection")
       .style("opacity", 0) // default set to OFF
       .attr("fill", function (d) {
         return color(d.MEDMAXT);
-      })
-      .attr("r", function (d) {
-        if (currentZoom == 13)
-        return radius_Init(d.ATHCNT);
-
-        else if (currentZoom == 9)
-        return radius_9(d.ATHCNT);
-
-        else if (currentZoom == 10)
-        return radius_10(d.ATHCNT);
-
-        else if (currentZoom == 11)
-        return radius_11(d.ATHCNT);
-
-        else if (currentZoom == 12)
-        return radius_12(d.ATHCNT);
-
-        else if (currentZoom == 14)
-        return radius_14(d.ATHCNT);
-
-        else if (currentZoom == 15)
-        return radius_15(d.ATHCNT);
-
-        else if (currentZoom == 16)
-        return radius_16(d.ATHCNT);
-
-        else if (currentZoom == 17)
-        return radius_17(d.ATHCNT);
-
-        else if (currentZoom == 18)
-        return radius_18(d.ATHCNT);
-
       });
     
     
-    //map.on("viewreset", update);
     //update function to translate points | Called in zoom end function 
-    update();
     function update() {
       intersection.attr("transform", 
       function(d) { 
@@ -584,9 +530,34 @@ var dataView = (function() {
       )
     }
 
+    // reset map view on zoom
+    map.on("viewreset", reset);
+    // call reset function to realize data paths
+    reset();
+
+    // define reset function
+    function reset() {
+      // compute projected bounding box
+      var bounds = path.bounds(nodes_collection),
+          topLeft = bounds[0],
+          bottomRight = bounds[1];
+
+      // set SVG dimensions w/ padding to display features
+      // above or to the left of the origin
+      svg.attr("width", bottomRight[0] - topLeft[0])
+        .attr("height", bottomRight[1] - topLeft[1])
+        .style("left", topLeft[0] + "px")
+        .style("top", topLeft[1] + "px");
+
+      g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+      // initialize path data by setting d attribute
+      intersection.attr("d", "circle");
+      
+    } 
 
     // on zoom end rescale proportional symbols
-    //also re-translate their coordinates update()
+    // also re-translate their coordinates update()
     map.on('zoomend', ze);
     ze();
     function ze() {
@@ -596,135 +567,175 @@ var dataView = (function() {
       intersectionLegend.selectAll("circle").transition().ease("linear").duration(750)
         .style("opacity", 1)
         .attr("cy", function (d) {
+
           if (currentZoom == 13)
-            return -radius_Init(d);
+            return "";
 
           else if (currentZoom == 9)
-          return -radius_9(d);
+            return "";
 
           else if (currentZoom == 10)
-          return -radius_10(d);
+            return "";
 
           else if (currentZoom == 11)
-          return -radius_11(d);
+            return "";
 
           else if (currentZoom == 12)
-          return -radius_12(d);
+            return "";
 
           else if (currentZoom == 14)
-          return -radius_14(d);
+            return "";
 
           else if (currentZoom == 15)
-          return -radius_15(d);
+            return "";
 
           else if (currentZoom == 16)
-          return -radius_16(d);
+            return -radius_16(d);
 
           else if (currentZoom == 17)
-          return -radius_17(d);
+            return -radius_17(d);
 
           else if (currentZoom == 18)
-          return -radius_18(d);
+            return -radius_18(d);
 
         })
         .attr("r", function (d) {
+
           if (currentZoom == 13)
-          return radius_Init(d);
+            return "";
 
           else if (currentZoom == 9)
-          return radius_9(d);
+            return "";
 
           else if (currentZoom == 10)
-          return radius_10(d);
+            return "";
 
           else if (currentZoom == 11)
-          return radius_11(d);
+            return "";
 
           else if (currentZoom == 12)
-          return radius_12(d);
+            return "";
 
           else if (currentZoom == 14)
-          return radius_14(d);
+            return "";
 
           else if (currentZoom == 15)
-          return radius_15(d);
+            return "";
 
           else if (currentZoom == 16)
-          return radius_16(d);
+            return radius_16(d);
 
           else if (currentZoom == 17)
-          return radius_17(d);
+            return radius_17(d);
 
           else if (currentZoom == 18)
-          return radius_18(d);
+            return radius_18(d);
 
         });
 
       intersectionLegend.selectAll("text").transition().ease("linear").duration(750)
         .attr("y", function(d) { 
+
         if (currentZoom == 13)
-        return -2 * radius_Init(d);
+          return "";
 
         else if (currentZoom == 9)
-        return -2 * radius_9(d);
+          return "";
 
         else if (currentZoom == 10)
-        return -2 * radius_10(d);
+          return "";
 
         else if (currentZoom == 11)
-        return -2 * radius_11(d);
+          return "";
 
         else if (currentZoom == 12)
-        return -2 * radius_12(d);
+          return "";
 
         else if (currentZoom == 14)
-        return -2 * radius_14(d);
+          return "";
 
         else if (currentZoom == 15)
-        return -2 * radius_15(d);
+          return "";
 
         else if (currentZoom == 16)
-        return -2 * radius_16(d);
+          return -2 * radius_16(d);
 
         else if (currentZoom == 17)
-        return -2 * radius_17(d);
+          return -2 * radius_17(d);
 
         else if (currentZoom == 18)
-        return  -2 * radius_18(d);
-      });
+          return  -2 * radius_18(d);
+
+      })
+      .text(function(d) {
+
+        if (currentZoom == 13)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 9)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 10)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 11)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 12)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 13)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 14)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 15)
+          return "Circles too small to resolve dynamic legend";
+
+        else if (currentZoom == 16)
+          return d;
+
+        else if (currentZoom == 17)
+          return d;
+
+        else if (currentZoom == 18)
+          return d;
+
+        });
 
       
+      intersection.transition().attr("r", function (d) {
 
-      intersection.attr("r", function (d) {
         if (currentZoom == 13)
-        return radius_Init(d.ATHCNT);
+          return radius_Init(d.ATHCNT);
 
         else if (currentZoom == 9)
-        return radius_9(d.ATHCNT);
+          return radius_9(d.ATHCNT);
 
         else if (currentZoom == 10)
-        return radius_10(d.ATHCNT);
+          return radius_10(d.ATHCNT);
 
         else if (currentZoom == 11)
-        return radius_11(d.ATHCNT);
+          return radius_11(d.ATHCNT);
 
         else if (currentZoom == 12)
-        return radius_12(d.ATHCNT);
+          return radius_12(d.ATHCNT);
 
         else if (currentZoom == 14)
-        return radius_14(d.ATHCNT);
+          return radius_14(d.ATHCNT);
 
         else if (currentZoom == 15)
-        return radius_15(d.ATHCNT);
+          return radius_15(d.ATHCNT);
 
         else if (currentZoom == 16)
-        return radius_16(d.ATHCNT);
+          return radius_16(d.ATHCNT);
 
         else if (currentZoom == 17)
-        return radius_17(d.ATHCNT);
+          return radius_17(d.ATHCNT);
 
         else if (currentZoom == 18)
-        return radius_18(d.ATHCNT);
+          return radius_18(d.ATHCNT);
 
       });
 
@@ -733,52 +744,71 @@ var dataView = (function() {
       
     };  
 
+
   });
 
-
-  //// EDGE DATA ////
-
-  // define labels and statistics for dropdown menu
-  var labels = ['Select Statistic', 'Weekday Total Activity Count', 'Weekday Commute Count', 'Weekday Total Athlete Count'];  
-  var statistics = ['Select Statistic', 'weekday_TACTCNT', 'weekday_CMTCNT', 'weekday_TATHCNT']; // these names come straight from variables in geojson
-
-  // select dropdown div, append selectable options, apply labels
-  d3.select(".header.leaflet-control")
-    .append("select")
-    .attr("id", "dropdown")
-    .selectAll("option")
-    .data(statistics)
-    .enter()
-    .append("option")
-    .attr("value", function (d) {
-      return d;
-    })
-    .text(function (d, i) { 
-      return labels[i]; 
-    });
 
   // select header and left leaflet control 
   d3.select(".header.leaflet-control")
     // append toggle
     .append("foreignObject")
-    .html("<form><input type=checkbox name=toggle id=toggle />Toggle Intersections<label for=toggle></label></form>")
+    .html("<form><input type=checkbox name=toggle id=toggle />Toggle Intersections<label for=toggle></label></form>");
   
-    // select toggle, define click function to turn intersections on/off
+  // select toggle, define click function to turn intersections on/off
   d3.select("#toggle").on('click', function() {
 
     var active = intersection.active ? false : true;
+
+    console.log("active", active);
+
     var newOpacity = active ? 0.6 : 0;
-    // Hide or show intersections
+
+    // Hide or show intersections and legend
     d3.selectAll("#intersection").style("opacity", newOpacity);
-    d3.selectAll("#intersectionLegend").style("opacity", newOpacity);
+
+    //d3.selectAll(".tooltip").style("opacity", newOpacity)
+
+    d3.selectAll(".intersection_legend").style("opacity", newOpacity);
     // Update whether or not the elements are active
     intersection.active = active;
 
+    d3.selectAll("#intersection").on("mouseover", function(d) {  
+      if (active == false) 
+        return 
+          d3.select(this).style("opacity", 1);
+          tooltip.transition()
+            .duration(200)  
+            .style("opacity", 1);  
+          tooltip.html("Athlete Count: " + "<b>" + d.ATHCNT + "</b>" + "<br>" + "Median Max Wait Time: " + "<b>" + d.MEDMAXT + " seconds" + "</b>")
+            .style("left", (d3.event.pageX) + "px")      
+            .style("top", (d3.event.pageY - 28) + "px");
+    })
+
+    d3.selectAll("#intersection").on("mouseout", function(d) {  
+      if (active == false) 
+        return 
+          d3.select(this).style("opacity", 0.6);
+          tooltip.transition()
+            .duration(500)  
+            .style("opacity", 0);
+    });
+
   });
 
+  // select head/ leaflet control, append svg, append
+  // data group element for proportional symbol legend 
+  var intersectionLegend = d3.select(".header.leaflet-control").append("svg").append("g")
+    .attr("class", "intersection_legend")
+    .style("opacity", 0) // default set to 0
+    .attr("transform", "translate(" + (width - 30) + "," + (height + 100) + ")")
+    .selectAll("g")
+    //.data([1, 583, 1912, 3905, 6551, 11185])
+    .data([800, 6000, 12000])
+    .enter().append("g");
+
+
   
-
-
+  //// EDGE DATA ////
 
   // bind statistics defined above to select and create an on change function
   d3.select("select")
@@ -804,7 +834,7 @@ var dataView = (function() {
 
         var edge_data = edges_collection.features;
       
-        console.log("data", edge_data);
+        console.log("edges", edge_data);
 
         edge_data.forEach(function(d) {
           // unique ID variable not currently in use
@@ -819,6 +849,8 @@ var dataView = (function() {
 
         // stop spin.js loader
         spinner.stop();
+
+        
         
       
         //console.log("d", edge_data);
@@ -856,65 +888,181 @@ var dataView = (function() {
         
 
         // create quantile color function to map statistic values to colors
-        var color = d3.scale.threshold()
+        var stat1_color = d3.scale.threshold()
           .domain([Min, 2969, 10232, 23272, 43506]) // these values come jenks classifier
           .range([NoValueColor, MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
 
-        var color_labels = [Min, 2969, 10232, 23272, 43506, Max];
+        var stat1_color_labels = [Min, 2969, 10232, 23272, 43506, Max];
 
-        var color2 = d3.scale.threshold()
+        var stat2_color = d3.scale.threshold()
           .domain([Min, 1697, 6237, 14210, 27290]) // these values come jenks classifier
           .range([NoValueColor, MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
 
-        var color2_labels = [Min, 1697, 6237, 14210, 27290, Max];
+        var stat2_color_labels = [Min, 1697, 6237, 14210, 27290, Max];
 
-        var color3 = d3.scale.threshold()
+        var stat3_color = d3.scale.threshold()
           .domain([Min, 520, 1798, 3708, 6187]) // these values come jenks classifier
           .range([NoValueColor, MinColor, MinMidColor, MidColor, MidMaxColor, MaxColor]);
 
-        var color3_labels = [Min, 520, 1798, 3708, 6187, Max];
+        var stat3_color_labels = [Min, 520, 1798, 3708, 6187, Max];
 
     
-        // create linear function to weight stroke width of edges based on statistic 
-        var weightScale = d3.scale.linear()
+        // create linear function to weight stroke width of edges based on statistic and map zoom
+        var weightScale_9 = d3.scale.linear()
           .domain(d3.extent(edge_data, function(d) { return d.stat; }))
-          .range([0.5, 5]); // values irrelevant in context of the data
+          .range([0.05, 0.1]); // values irrelevant in context of the data
 
-        // project points, convert geojson to svg
-        var transform = d3.geo.transform({point: projectPoint}),
-            path = d3.geo.path().projection(transform);
+        var weightScale_10 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([0.1, .2]); // values irrelevant in context of the data
+
+        var weightScale_11 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([0.2, .4]); // values irrelevant in context of the data
+
+        var weightScale_12 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([0.4, .8]); // values irrelevant in context of the data
+
+        var weightScale_Init = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([0.8, 1.6]); // values irrelevant in context of the data
+
+        var weightScale_14 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([1.6, 3.2]); // values irrelevant in context of the data
+
+        var weightScale_15 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([3.2, 6.4]); // values irrelevant in context of the data
+
+        var weightScale_16 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([6.4, 12.8]); // values irrelevant in context of the data
+
+        var weightScale_17 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([12.8, 25.6]); // values irrelevant in context of the data
+
+        var weightScale_18 = d3.scale.linear()
+          .domain(d3.extent(edge_data, function(d) { return d.stat; }))
+          .range([25.2, 51.2]); // values irrelevant in context of the data
+
+        var currentZoom = map.getZoom();
 
         // select all edges, bind data
         var appending_edges = g.selectAll("path")
-          .data(edge_data)
+          .data(edge_data.sort(function(a, b) { return a.stat - b.stat}));
+
         
         // enter data, append path, provide "edge" id
         appending_edges.enter().append("path")
-          .attr("id", "edge");
+          .attr("id", "edge")
+          .style("opacity", 0.7);
+    
+        // make the streets' legend visible on load
+        d3.select(".legend.leaflet-control").transition().style("opacity", 1);
       
         // make paths transitionable between data views
-        appending_edges.transition()
-          // apply edge weight function
-          .style("stroke-width", function (d) {
-            return weightScale(d.stat);
-          })
-          // apply color function // color data values = 0 green
-          .attr("stroke", function (d) {
-            if (statistic == 'weekday_TACTCNT' && d.stat > 0)
-              return color(d.stat);
-            else if (statistic == 'weekday_TACTCNT' && d.stat <= 0)
-              return NoValueColor;
-            else if (statistic == 'weekday_CMTCNT' && d.stat > 0)
-              return color2(d.stat);
-            else if (statistic == 'weekday_CMTCNT' && d.stat <= 0)
-              return NoValueColor;
-            else if (statistic == 'weekday_TATHCNT' && d.stat > 0)
-              return color3(d.stat);
-            else if (statistic == 'weekday_TATHCNT' && d.stat <= 0)
-              return NoValueColor;
-            else if (statistic == 'Select Statistic')
-              return d3.selectAll("#edge").remove();
-          });
+        //appending_edges.transition()
+        
+        map.on('zoomend', ze);
+        ze();
+        function ze() {
+          
+          var currentZoom = map.getZoom();
+      
+          appending_edges.transition()
+            .style("stroke-linecap", "round")
+            .style("stroke-linejoin", "round")
+            .style("stroke-width", function (d) {
+              if (currentZoom == 13)
+                return weightScale_Init(d.stat);
+
+              else if (currentZoom == 10)
+                return weightScale_10(d.stat);
+
+              else if (currentZoom == 11)
+                return weightScale_11(d.stat);
+
+              else if (currentZoom == 12)
+                return weightScale_12(d.stat);
+
+              else if (currentZoom == 14)
+                return weightScale_14(d.stat);
+
+              else if (currentZoom == 15)
+                return weightScale_15(d.stat);
+
+              else if (currentZoom == 16)
+                return weightScale_16(d.stat);
+
+              else if (currentZoom == 17)
+                return weightScale_17(d.stat);
+
+              else if (currentZoom == 18)
+                return weightScale_18(d.stat);
+
+            })
+            // apply color function // color data values = 0 green
+            .attr("stroke", function (d) {
+              if (statistic == 'weekday_TACTCNT' && d.stat > 0)
+                return stat1_color(d.stat);
+          
+              else if (statistic == 'weekday_TACTCNT' && d.stat <= 0)
+                return NoValueColor;
+            
+              else if (statistic == 'weekday_CMTCNT' && d.stat > 0)
+                return stat2_color(d.stat);
+            
+              else if (statistic == 'weekday_CMTCNT' && d.stat <= 0)
+                return NoValueColor;
+            
+              else if (statistic == 'weekday_TATHCNT' && d.stat > 0)
+                return stat3_color(d.stat);
+            
+              else if (statistic == 'weekday_TATHCNT' && d.stat <= 0)
+                return NoValueColor;
+            
+              else if (statistic == 'Select Statistic')
+                return "";
+                //d3.select(".legend.leaflet-control").style("opacity", 0);
+
+            });
+
+            appending_edges.on("mouseover", function(d) {
+              d3.select(this).style("opacity", 1);
+              tooltip.transition()
+                .duration(50)  
+                .style("opacity", 1)
+                .style("left", (d3.event.pageX) + "px")      
+                .style("top", (d3.event.pageY - 28) + "px")
+
+                if (statistic == 'weekday_TACTCNT') 
+                  return tooltip.html("Weekday Total Activity Count: " + "<b>" + d.stat + "</b>");
+              
+                else if (statistic == 'weekday_CMTCNT') 
+                  return tooltip.html("Weekday Total Commute Count: " + "<b>" + d.stat + "</b>");
+              
+                else if (statistic == 'weekday_TATHCNT') 
+                  return tooltip.html("Weekday Total Athlete Count: " + "<b>" + d.stat + "</b>");
+              
+                else if (statistic == 'Select Statistic') 
+                  return "";
+              
+            })
+            .on("mouseout", function(d) {
+              d3.select(this).style("opacity", 0.7)
+              tooltip.transition()
+                .duration(500)  
+                .style("opacity", 0);
+            });
+      
+        }; 
+
+        // Bring intersections to the front on edge load
+        d3.selectAll("circle").moveToFront(); 
+   
 
         appending_edges.exit().remove();
       
@@ -933,13 +1081,13 @@ var dataView = (function() {
           .ticks(Min, Max)
           .tickValues(function () {
             if (statistic == 'weekday_TACTCNT') {
-              return color_labels;
+              return stat1_color_labels;
             }
             else if (statistic == 'weekday_CMTCNT') {
-              return color2_labels;
+              return stat2_color_labels;
             }
             else if (statistic == 'weekday_TATHCNT') {
-              return color3_labels;
+              return stat3_color_labels;
             }
             else if (statistic == 'Select Statistic') {
               return "";
@@ -953,28 +1101,28 @@ var dataView = (function() {
         var appending_legend = g_key.selectAll("rect")
           .data(function () {
             if (statistic == 'weekday_TACTCNT') { 
-              return color.range().map(function(d, i) {
+              return stat1_color.range().map(function(d, i) {
                 return {
-                  x0: i ? x(color.domain()[i-1]) : x.range()[0],
-                  x1: i < color.domain().length ? x(color.domain()[i]) : x.range()[1],
+                  x0: i ? x(stat1_color.domain()[i-1]) : x.range()[0],
+                  x1: i < stat1_color.domain().length ? x(stat1_color.domain()[i]) : x.range()[1],
                   z: d
                 };
               })
             }
             else if (statistic == 'weekday_CMTCNT') {
-              return color2.range().map(function(d, i) {
+              return stat2_color.range().map(function(d, i) {
                 return {
-                  x0: i ? x(color2.domain()[i-1]) : x.range()[0],
-                  x1: i < color2.domain().length ? x(color2.domain()[i]) : x.range()[1],
+                  x0: i ? x(stat2_color.domain()[i-1]) : x.range()[0],
+                  x1: i < stat2_color.domain().length ? x(stat2_color.domain()[i]) : x.range()[1],
                   z: d
                 };
               })
             }
             else if (statistic == 'weekday_TATHCNT') {
-              return color3.range().map(function(d, i) {
+              return stat3_color.range().map(function(d, i) {
                 return {
-                  x0: i ? x(color3.domain()[i-1]) : x.range()[0],
-                  x1: i < color3.domain().length ? x(color3.domain()[i]) : x.range()[1],
+                  x0: i ? x(stat3_color.domain()[i-1]) : x.range()[0],
+                  x1: i < stat3_color.domain().length ? x(stat3_color.domain()[i]) : x.range()[1],
                   z: d
                 };
               })
@@ -1028,7 +1176,7 @@ var dataView = (function() {
               return "Metro Statistic: Weekday Commute Count"// | " + "Min: " + Min + " | Max: " + Max;
             }
             else if (statistic === 'weekday_TATHCNT') {
-              return "Metro Statistic: Weekday Athlete Count"// | " + "Min: " + Min + " | Max: " + Max;
+              return "Metro Statistic: Weekday Athlete Count" // | " + "Min: " + Min + " | Max: " + Max;
             }
             else if (statistic == 'Select Statistic') {
               return ""; 
@@ -1063,14 +1211,6 @@ var dataView = (function() {
           // initialize path data by setting d attribute
           appending_edges.attr("d", path)
       
-        } 
-
-        // adapts Leaflet's latLngToLayerPoint and LatLng methods
-        // to project a single point; resulting coordinates are
-        // passed to an output geometry stream
-        function projectPoint(x,y) {
-          var point = map.latLngToLayerPoint(new L.LatLng(y,x));
-          this.stream.point(point.x, point.y);
         } 
 
       });
